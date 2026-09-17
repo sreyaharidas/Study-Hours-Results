@@ -1,0 +1,5 @@
+numpy
+pandas
+streamlit
+sci-kit learn
+joblib
