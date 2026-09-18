@@ -40,4 +40,9 @@ demo = gr.Interface(
     description="Enter the number of study hours to predict whether the student will pass or fail."
 )
 
-demo.launch()
+import os
+
+demo.launch(
+    server_name="0.0.0.0",
+    server_port=int(os.environ.get("PORT", 7860))
+)
