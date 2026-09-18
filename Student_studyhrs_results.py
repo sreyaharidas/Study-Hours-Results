@@ -1,24 +1,43 @@
-import streamlit as st
+import gradio as gr
 import joblib
-model=joblib.load("logistic_regression_student_studyhours_model.pkl")
-st.title("Student pass/fail based on study hours")
-hours=st.number_input("Enter Study Hours",min_value=0.0,max_value=15.0,value=5.0)
-attendance = st.number_input("Enter Attendance (%)",min_value=0.0,max_value=100.0,value=75.0)
-if st.button("🔮 Predict Result"):
+
+model = joblib.load("logistic_regression_student_studyhours_model.pkl")
+
+def predict_result(hours):
     input_data = [[hours]]
+
     prediction = model.predict(input_data)
     probabilities = model.predict_proba(input_data)
+
     pass_probability = probabilities[0][1] * 100
     fail_probability = probabilities[0][0] * 100
 
-    st.subheader("📊 Prediction Result")
-
     if prediction[0] == 1:
-        st.success("✅ Student is predicted to PASS")
+        result = "✅ Student is predicted to PASS"
     else:
-        st.error("❌ Student is predicted to FAIL")
+        result = "❌ Student is predicted to FAIL"
 
-    st.write(f"Probability of Passing: {pass_probability:.2f}%")
-    st.progress(pass_probability / 100)
+    return (
+        result,
+        f"Probability of Passing: {pass_probability:.2f}%",
+        f"Probability of Failing: {fail_probability:.2f}%"
+    )
 
-    st.write(f"Probability of Failing: {fail_probability:.2f}%")
+demo = gr.Interface(
+    fn=predict_result,
+    inputs=gr.Number(
+        label="Enter Study Hours",
+        minimum=0,
+        maximum=15,
+        value=5
+    ),
+    outputs=[
+        gr.Textbox(label="📊 Prediction Result"),
+        gr.Textbox(label="Probability of Passing"),
+        gr.Textbox(label="Probability of Failing")
+    ],
+    title="🎓 Student Pass/Fail Prediction",
+    description="Enter the number of study hours to predict whether the student will pass or fail."
+)
+
+demo.launch()
