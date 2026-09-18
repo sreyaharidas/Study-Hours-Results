@@ -1,50 +1,47 @@
 import gradio as gr
 import joblib
+import pandas as pd
+import os
 
-model = joblib.load("logistic_regression_student_studyhours_model.pkl")
+# Load model
+model = joblib.load("logistic_regression_student_studyhours_attendance_model.pkl")
 
-def predict_result(hours):
-    input_data = [[hours]]
 
-    prediction = model.predict(input_data)
-    probabilities = model.predict_proba(input_data)
+def predict_result(study_hours):
 
-    pass_probability = probabilities[0][1] * 100
-    fail_probability = probabilities[0][0] * 100
+    input_data = pd.DataFrame({
+        "Study_Hours": [study_hours]
+    })
 
-    if prediction[0] == 1:
-        result = "✅ Student is predicted to PASS"
+    prediction = model.predict(input_data)[0]
+    probability = model.predict_proba(input_data)[0]
+
+    if prediction == 1:
+        result = "PASS"
+        confidence = probability[1] * 100
     else:
-        result = "❌ Student is predicted to FAIL"
+        result = "FAIL"
+        confidence = probability[0] * 100
 
-    return (
-        result,
-        f"Probability of Passing: {pass_probability:.2f}%",
-        f"Probability of Failing: {fail_probability:.2f}%"
-    )
+    return f"Student Result: {result}\nProbability: {confidence:.2f}%"
+
 
 demo = gr.Interface(
     fn=predict_result,
     inputs=gr.Number(
         label="Enter Study Hours",
         minimum=0,
-        maximum=15,
+        maximum=24,
         value=5
     ),
-    outputs=[
-        gr.Textbox(label="📊 Prediction Result"),
-        gr.Textbox(label="Probability of Passing"),
-        gr.Textbox(label="Probability of Failing")
-    ],
-    title="🎓 Student Pass/Fail Prediction",
-    description="Enter the number of study hours to predict whether the student will pass or fail."
+    outputs=gr.Textbox(label="Prediction"),
+    title="Student Result Prediction",
+    description="Predict Pass or Fail based on Study Hours."
 )
 
-import os
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 7860))
     demo.launch(
         server_name="0.0.0.0",
-        server_port=port
+        server_port=int(os.environ.get("PORT", 7860))
     )
